@@ -1,8 +1,10 @@
 import discord
 import requests
 import asyncio
+import os
 
-TOKEN = "MTQ5MTUzNjI4NzA5Njg5NzU0Nw.GkkX6n.-R3_CZm_8z7WCE1P26Hoeftz0z5OD3qaoA6uio"
+TOKEN = os.getenv("MTQ5MTUzNjI4NzA5Njg5NzU0Nw.GMlPlE.ugO7UnG-wTN2kwy7glDxu7zSGACcQxHCW0Bv2k")
+
 
 CHANNELS = {
     "NXPCUSDT": 1491535220661555424,
