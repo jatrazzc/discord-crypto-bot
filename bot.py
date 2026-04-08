@@ -2,22 +2,44 @@ import discord
 import requests
 import asyncio
 import os
+from flask import Flask
+from threading import Thread
 
 TOKEN = os.getenv("TOKEN")
+PORT = int(os.environ.get("PORT", 10000))
 
+# ===== WEB SERVER (OBLIGATORIO PARA RENDER) =====
+app = Flask(__name__)
+
+@app.route('/')
+def home():
+    return "Bot activo ✅"
+
+def run_web():
+    app.run(host="0.0.0.0", port=PORT, debug=False, use_reloader=False)
+
+def keep_alive():
+    t = Thread(target=run_web)
+    t.daemon = True
+    t.start()
+
+
+# ===== DISCORD BOT =====
 CHANNELS = {
     "NXPCUSDT": 1491535220661555424,
     "BTCUSDT": 1491535867628490832,
     "ETHUSDT": 1491535369982709780,
     "SOLUSDT": 1491535327620235525,
     "AVAXUSDT": 1491535431240515675,
-    "WEMIXUSDT": 1491574691062747196
+    "WEMIXUSDT": TU_CHANNEL_ID_AQUI  # ← reemplaza esto
 }
 
 UPDATE_TIME = 120
 
 intents = discord.Intents.default()
 client = discord.Client(intents=intents)
+
+last_prices = {}
 
 
 def get_price(symbol):
@@ -37,18 +59,19 @@ def get_emoji(symbol):
     }.get(symbol, "💰")
 
 
-@client.event
-async def on_ready():
-    print(f"Bot conectado como {client.user}")
+async def price_loop():
+    await client.wait_until_ready()
 
-    last_prices = {}
-
-    while True:
+    while not client.is_closed():
         for symbol, channel_id in CHANNELS.items():
             try:
                 channel = client.get_channel(channel_id)
-                price = get_price(symbol)
 
+                if channel is None:
+                    print(f"No se encontró el canal {channel_id}")
+                    continue
+
+                price = get_price(symbol)
                 last_price = last_prices.get(symbol)
 
                 if last_price:
@@ -83,4 +106,12 @@ async def on_ready():
         await asyncio.sleep(UPDATE_TIME)
 
 
+@client.event
+async def on_ready():
+    print(f"Bot conectado como {client.user}")
+    client.loop.create_task(price_loop())
+
+
+# ===== START =====
+keep_alive()
 client.run(TOKEN)
