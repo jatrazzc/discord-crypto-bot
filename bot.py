@@ -5,14 +5,13 @@ import os
 
 TOKEN = os.getenv("TOKEN")
 
-
-
 CHANNELS = {
     "NXPCUSDT": 1491535220661555424,
     "BTCUSDT": 1491535867628490832,
     "ETHUSDT": 1491535369982709780,
     "SOLUSDT": 1491535327620235525,
-    "AVAXUSDT": 1491535431240515675
+    "AVAXUSDT": 1491535431240515675,
+    "WEMIXUSDT": 1491574691062747196
 }
 
 UPDATE_TIME = 120
@@ -33,7 +32,8 @@ def get_emoji(symbol):
         "BTCUSDT": "🟡",
         "ETHUSDT": "💎",
         "SOLUSDT": "🟢",
-        "AVAXUSDT": "🔺"
+        "AVAXUSDT": "🔺",
+        "WEMIXUSDT": "🟠"
     }.get(symbol, "💰")
 
 
@@ -71,7 +71,6 @@ async def on_ready():
                     price_text = f"${price:.4f}"
 
                 name = symbol.replace("USDT", "")
-
                 new_name = f"{trend}{emoji} {name}: {price_text}"
 
                 await channel.edit(name=new_name)
