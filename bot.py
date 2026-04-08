@@ -3,7 +3,8 @@ import requests
 import asyncio
 import os
 
-TOKEN = os.getenv("MTQ5MTUzNjI4NzA5Njg5NzU0Nw.GMlPlE.ugO7UnG-wTN2kwy7glDxu7zSGACcQxHCW0Bv2k")
+TOKEN = os.getenv("TOKEN")
+
 
 
 CHANNELS = {
