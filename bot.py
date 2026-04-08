@@ -34,7 +34,7 @@ CHANNELS = {
     "WEMIXUSDT": 1491574691062747196
 }
 
-UPDATE_TIME = 120
+UPDATE_TIME = 60
 
 intents = discord.Intents.default()
 client = discord.Client(intents=intents)
