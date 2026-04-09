@@ -5,8 +5,10 @@ import os
 from flask import Flask
 from threading import Thread
 
+# ===== CONFIG =====
 TOKEN = os.getenv("TOKEN")
 PORT = int(os.environ.get("PORT", 10000))
+UPDATE_TIME = 60  # segundos entre actualizaciones
 
 # ===== WEB SERVER (OBLIGATORIO PARA RENDER) =====
 app = Flask(__name__)
@@ -31,10 +33,8 @@ CHANNELS = {
     "ETHUSDT": 1491535369982709780,
     "SOLUSDT": 1491535327620235525,
     "AVAXUSDT": 1491535431240515675,
-    "WEMIXUSDT": 1491574691062747196  # Cambia por tu canal WEMIX
+    "WEMIXUSDT": 1491574691062747196
 }
-
-UPDATE_TIME = 60  # Actualiza cada 60 segundos
 
 intents = discord.Intents.default()
 client = discord.Client(intents=intents)
@@ -42,9 +42,13 @@ client = discord.Client(intents=intents)
 last_prices = {}
 
 def get_price(symbol):
-    url = f"https://api.binance.com/api/v3/ticker/price?symbol={symbol}"
-    data = requests.get(url).json()
-    return float(data["price"])
+    try:
+        url = f"https://api.binance.com/api/v3/ticker/price?symbol={symbol}"
+        data = requests.get(url).json()
+        return float(data["price"])
+    except Exception as e:
+        print(f"[ERROR] No se pudo obtener el precio de {symbol}: {e}")
+        return None
 
 def get_emoji(symbol):
     return {
@@ -59,6 +63,7 @@ def get_emoji(symbol):
 async def price_loop():
     await client.wait_until_ready()
     while not client.is_closed():
+        print("⏱ Ejecutando actualización de precios...")
         for symbol, channel_id in CHANNELS.items():
             try:
                 channel = client.get_channel(channel_id)
@@ -67,7 +72,10 @@ async def price_loop():
                     continue
 
                 price = get_price(symbol)
-                print(f"[DEBUG] {symbol}: {price}")  # <--- Print de debug
+                if price is None:
+                    continue  # saltar si falla Binance
+
+                print(f"[DEBUG] {symbol}: {price}")
 
                 last_price = last_prices.get(symbol)
                 if last_price:
@@ -81,7 +89,6 @@ async def price_loop():
                     trend = ""
 
                 emoji = get_emoji(symbol)
-
                 if price >= 1000:
                     price_text = f"${price:,.0f}"
                 elif price >= 1:
@@ -93,10 +100,12 @@ async def price_loop():
                 new_name = f"{trend}{emoji} {name}: {price_text}"
 
                 await channel.edit(name=new_name)
-                print(f"[UPDATE] Canal {channel.name} actualizado a {new_name}")  # <--- Print de actualización
+                print(f"[UPDATE] Canal {channel.name} actualizado a {new_name}")
 
                 last_prices[symbol] = price
 
+            except discord.errors.Forbidden:
+                print(f"[ERROR] No se pudo editar el canal {symbol} ({channel_id}): permisos insuficientes")
             except Exception as e:
                 print(f"[ERROR] con {symbol}: {e}")
 
